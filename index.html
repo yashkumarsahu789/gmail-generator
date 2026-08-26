@@ -1,209 +1,145 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Random Email + Permanent Inbox + Search Inbox</title>
+    <title>Infinite Temp Mail</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f2f2f2; }
-        .box { background: #fff; padding: 20px; border-radius: 10px; width: 520px; margin: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        button {
-            padding: 10px 15px; background: #007bff; color: white;
-            border: none; border-radius: 5px; cursor: pointer; margin: 4px 2px;
-        }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f4f6f9; }
+        .box { background: #fff; padding: 20px; border-radius: 8px; width: 500px; margin: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        button { padding: 10px 14px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 4px 2px; }
         button:hover { background: #0056b3; }
-        #emailBox, #searchBox { background: #eee; padding: 10px; border-radius: 5px; margin-top: 10px; word-break: break-all; }
-        input {
-            width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc;
-            margin-top: 10px; box-sizing: border-box;
-        }
-        .mail {
-            background: #e9ecef; padding: 10px; margin: 8px 0;
-            border-radius: 5px; cursor: pointer; border-left: 4px solid #007bff;
-        }
-        .mail:hover { background: #dee2e6; }
-        pre { background: #1e1e1e; color: #39ff14; padding: 15px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; }
+        #emailBox { background: #e9ecef; padding: 10px; border-radius: 4px; margin: 10px 0; font-weight: bold; word-break: break-all; }
+        input { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; margin: 8px 0; box-sizing: border-box; }
+        .mail { background: #f8f9fa; border-left: 4px solid #007bff; padding: 10px; margin: 6px 0; cursor: pointer; border-radius: 3px; }
+        .mail:hover { background: #e2e6ea; }
+        pre { background: #212529; color: #39ff14; padding: 12px; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h2>Temp Mail (Infinite Generator)</h2>
+    <h2>Infinite Temp Mail</h2>
 
-    <button onclick="generateEmail()">Generate New Email</button>
-    <button onclick="loadSavedEmail()">Load Saved Inbox</button>
+    <button onclick="generateNewEmail()">Generate Random Email</button>
+    <button onclick="loadSavedInbox()">Load Last Saved Email</button>
 
     <div id="emailBox">No active email</div>
 
-    <h3>Load Inbox by Email Address:</h3>
-    <input id="searchEmail" placeholder="Enter temp email (e.g. name@domain.com)">
-    <button onclick="loadByEmail()">Load Inbox</button>
-
-    <div id="searchBox" style="display:none;"></div>
+    <h3>Search Any Inbox:</h3>
+    <input id="searchEmail" placeholder="e.g. user123@1secmail.com">
+    <button onclick="loadByCustomEmail()">Load Inbox</button>
 
     <h3>Inbox:</h3>
-    <div id="inbox"><i>Inbox empty</i></div>
+    <div id="inbox"><i>No messages found.</i></div>
 
-    <h3>Mail Content:</h3>
+    <h3>Email Content:</h3>
     <pre id="mailContent">Select an email to view content...</pre>
 </div>
 
 <script>
-let currentEmail = "";
-let emailLogin = "";
+let currentLogin = "";
+let currentDomain = "";
 let pollInterval = null;
-const DEFAULT_PASS = "Pass_123456";
+
+function splitEmail(email) {
+    const parts = email.trim().split("@");
+    return { login: parts[0], domain: parts[1] };
+}
 
 function startPolling() {
     if (pollInterval) clearInterval(pollInterval);
     loadInbox();
-    pollInterval = setInterval(loadInbox, 6000);
+    pollInterval = setInterval(loadInbox, 5000);
 }
 
-function saveEmail() {
-    localStorage.setItem("saved_email", currentEmail);
-    localStorage.setItem("saved_token", emailLogin);
+// Generate infinite random email
+async function generateNewEmail() {
+    const emailBox = document.getElementById("emailBox");
+    emailBox.innerHTML = "Generating...";
+
+    try {
+        const res = await fetch("https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1");
+        const data = await res.json();
+        const fullEmail = data[0];
+
+        const { login, domain } = splitEmail(fullEmail);
+        currentLogin = login;
+        currentDomain = domain;
+
+        emailBox.innerHTML = "Active Email: " + fullEmail;
+        localStorage.setItem("saved_temp_email", fullEmail);
+        startPolling();
+    } catch (err) {
+        emailBox.innerHTML = "<span style='color:red;'>Failed to connect to API</span>";
+    }
 }
 
-function loadSavedEmail() {
-    const savedEmail = localStorage.getItem("saved_email");
-    const savedToken = localStorage.getItem("saved_token");
-
-    if (!savedEmail || !savedToken) {
-        alert("No saved email found in this browser!");
+// Load saved email from storage
+function loadSavedInbox() {
+    const saved = localStorage.getItem("saved_temp_email");
+    if (!saved) {
+        alert("No saved email found!");
         return;
     }
-
-    currentEmail = savedEmail;
-    emailLogin = savedToken;
-
-    document.getElementById("emailBox").innerHTML = "<b>Saved Email Loaded:</b> " + currentEmail;
+    const { login, domain } = splitEmail(saved);
+    currentLogin = login;
+    currentDomain = domain;
+    document.getElementById("emailBox").innerHTML = "Active Email: " + saved;
     startPolling();
 }
 
-// Generate truly unique infinite emails
-async function generateEmail() {
-    const emailBox = document.getElementById("emailBox");
-    emailBox.innerHTML = "<i>Generating...</i>";
-
-    try {
-        const domRes = await fetch("https://api.mail.tm/domains");
-        const domData = await domRes.json();
-        
-        if (!domData["hydra:member"] || domData["hydra:member"].length === 0) {
-            emailBox.innerHTML = "<b style='color:red;'>No active domains available right now.</b>";
-            return;
-        }
-
-        const domain = domData["hydra:member"][0].domain;
-        // High entropy unique username: timestamp + random alphanumeric
-        const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
-        currentEmail = `temp_${uniqueId}@${domain}`;
-
-        // Create Account
-        const regRes = await fetch("https://api.mail.tm/accounts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ address: currentEmail, password: DEFAULT_PASS })
-        });
-
-        if (!regRes.ok) throw new Error("Account creation failed");
-
-        // Login & get Bearer Token
-        const loginRes = await fetch("https://api.mail.tm/token", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ address: currentEmail, password: DEFAULT_PASS })
-        });
-
-        const loginData = await loginRes.json();
-        emailLogin = loginData.token;
-
-        emailBox.innerHTML = "<b>Your Email:</b> " + currentEmail;
-        saveEmail();
-        startPolling();
-    } catch (err) {
-        emailBox.innerHTML = "<b style='color:red;'>Error generating email: " + err.message + "</b>";
+// Load inbox by custom email entry
+function loadByCustomEmail() {
+    const input = document.getElementById("searchEmail").value.trim();
+    if (!input.includes("@")) {
+        alert("Please enter a valid email address!");
+        return;
     }
+    const { login, domain } = splitEmail(input);
+    currentLogin = login;
+    currentDomain = domain;
+    document.getElementById("emailBox").innerHTML = "Active Email: " + input;
+    localStorage.setItem("saved_temp_email", input);
+    startPolling();
 }
 
+// Check messages
 async function loadInbox() {
-    if (!emailLogin) return;
+    if (!currentLogin || !currentDomain) return;
 
     try {
-        const res = await fetch("https://api.mail.tm/messages", {
-            headers: { Authorization: "Bearer " + emailLogin }
-        });
-        
-        if (!res.ok) return;
-        const data = await res.json();
+        const res = await fetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${currentLogin}&domain=${currentDomain}`);
+        const list = await res.json();
         const inboxDiv = document.getElementById("inbox");
-        
-        const messages = data["hydra:member"] || [];
-        if (messages.length === 0) {
-            inboxDiv.innerHTML = "<i>No messages yet... (auto-checking)</i>";
+
+        if (!list || list.length === 0) {
+            inboxDiv.innerHTML = "<i>No messages yet (auto-checking every 5s)...</i>";
             return;
         }
 
         inboxDiv.innerHTML = "";
-        messages.forEach(mail => {
+        list.forEach(item => {
             const div = document.createElement("div");
             div.className = "mail";
-            div.innerHTML = `<b>${mail.subject || "(No Subject)"}</b><br><small>From: ${mail.from.address}</small>`;
-            div.onclick = () => readMail(mail.id);
+            div.innerHTML = `<b>${item.subject || "(No Subject)"}</b><br><small>From: ${item.from}</small>`;
+            div.onclick = () => readMessage(item.id);
             inboxDiv.appendChild(div);
         });
     } catch (e) {
-        console.error("Polling error:", e);
+        console.error("Inbox fetch failed", e);
     }
 }
 
-async function readMail(mailId) {
+// Read message body
+async function readMessage(id) {
     const pre = document.getElementById("mailContent");
-    pre.textContent = "Loading content...";
-    
+    pre.textContent = "Loading...";
+
     try {
-        const res = await fetch(`https://api.mail.tm/messages/${mailId}`, {
-            headers: { Authorization: "Bearer " + emailLogin }
-        });
+        const res = await fetch(`https://www.1secmail.com/api/v1/?action=readMessage&login=${currentLogin}&domain=${currentDomain}&id=${id}`);
         const mail = await res.json();
-        pre.textContent = mail.text || mail.html || "No text content found.";
+        pre.textContent = mail.textBody || mail.body || "No text body available.";
     } catch (e) {
-        pre.textContent = "Failed to load mail content.";
-    }
-}
-
-async function loadByEmail() {
-    const email = document.getElementById("searchEmail").value.trim();
-    const searchBox = document.getElementById("searchBox");
-
-    if (!email || !email.includes("@")) {
-        alert("Enter a valid email address!");
-        return;
-    }
-
-    try {
-        const loginRes = await fetch("https://api.mail.tm/token", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ address: email, password: DEFAULT_PASS })
-        });
-
-        const loginData = await loginRes.json();
-
-        if (!loginData.token) {
-            alert("Email not found or password mismatch!");
-            return;
-        }
-
-        emailLogin = loginData.token;
-        currentEmail = email;
-
-        searchBox.style.display = "block";
-        searchBox.innerHTML = "<b>Loaded Inbox of:</b> " + email;
-        document.getElementById("emailBox").innerHTML = "<b>Active Email:</b> " + email;
-
-        startPolling();
-    } catch (e) {
-        alert("Failed to connect to API.");
+        pre.textContent = "Error reading message.";
     }
 }
 </script>
