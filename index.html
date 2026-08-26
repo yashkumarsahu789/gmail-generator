@@ -1,145 +1,164 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Infinite Temp Mail</title>
+    <title>100% Working Infinite Temp Mail</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f4f6f9; }
-        .box { background: #fff; padding: 20px; border-radius: 8px; width: 500px; margin: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f2f5; }
+        .box { background: #fff; padding: 20px; border-radius: 8px; width: 500px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         button { padding: 10px 14px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 4px 2px; }
         button:hover { background: #0056b3; }
-        #emailBox { background: #e9ecef; padding: 10px; border-radius: 4px; margin: 10px 0; font-weight: bold; word-break: break-all; }
+        #emailBox, #searchBox { background: #e9ecef; padding: 10px; border-radius: 4px; margin: 10px 0; word-break: break-all; }
         input { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; margin: 8px 0; box-sizing: border-box; }
         .mail { background: #f8f9fa; border-left: 4px solid #007bff; padding: 10px; margin: 6px 0; cursor: pointer; border-radius: 3px; }
-        .mail:hover { background: #e2e6ea; }
+        .mail:hover { background: #dee2e6; }
         pre { background: #212529; color: #39ff14; padding: 12px; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h2>Infinite Temp Mail</h2>
+    <h2>Infinite Temp Mail (Zero Block)</h2>
 
-    <button onclick="generateNewEmail()">Generate Random Email</button>
-    <button onclick="loadSavedInbox()">Load Last Saved Email</button>
+    <button onclick="generateEmail()">Generate New Email</button>
+    <button onclick="loadSavedEmail()">Load Saved Email</button>
 
     <div id="emailBox">No active email</div>
 
-    <h3>Search Any Inbox:</h3>
-    <input id="searchEmail" placeholder="e.g. user123@1secmail.com">
-    <button onclick="loadByCustomEmail()">Load Inbox</button>
+    <h3>Load Inbox by Email:</h3>
+    <input id="searchEmail" placeholder="Enter username (e.g. testuser)">
+    <button onclick="setCustomEmail()">Load Inbox</button>
 
     <h3>Inbox:</h3>
     <div id="inbox"><i>No messages found.</i></div>
 
     <h3>Email Content:</h3>
-    <pre id="mailContent">Select an email to view content...</pre>
+    <pre id="mailContent">Click an email to read content...</pre>
 </div>
 
 <script>
-let currentLogin = "";
-let currentDomain = "";
-let pollInterval = null;
+let sid_token = "";
+let currentEmail = "";
+let pollTimer = null;
 
-function splitEmail(email) {
-    const parts = email.trim().split("@");
-    return { login: parts[0], domain: parts[1] };
-}
+// CORS proxy to allow direct double-click HTML opening
+const PROXY = "https://api.allorigins.win/raw?url=";
+const API_BASE = "https://api.guerrillamail.com/ajax.php";
 
 function startPolling() {
-    if (pollInterval) clearInterval(pollInterval);
-    loadInbox();
-    pollInterval = setInterval(loadInbox, 5000);
+    if (pollTimer) clearInterval(pollTimer);
+    checkInbox();
+    pollTimer = setInterval(checkInbox, 6000);
 }
 
-// Generate infinite random email
-async function generateNewEmail() {
+// 1. Generate Instant Infinite Email
+async function generateEmail() {
     const emailBox = document.getElementById("emailBox");
-    emailBox.innerHTML = "Generating...";
+    emailBox.innerHTML = "Creating infinite mailbox...";
 
     try {
-        const res = await fetch("https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1");
+        const res = await fetch(`${PROXY}${encodeURIComponent(API_BASE + "?f=get_email_address")}`);
         const data = await res.json();
-        const fullEmail = data[0];
 
-        const { login, domain } = splitEmail(fullEmail);
-        currentLogin = login;
-        currentDomain = domain;
+        sid_token = data.sid_token;
+        currentEmail = data.email_addr;
 
-        emailBox.innerHTML = "Active Email: " + fullEmail;
-        localStorage.setItem("saved_temp_email", fullEmail);
+        emailBox.innerHTML = "<b>Your Email:</b> " + currentEmail;
+        localStorage.setItem("saved_sid", sid_token);
+        localStorage.setItem("saved_email", currentEmail);
+
         startPolling();
     } catch (err) {
-        emailBox.innerHTML = "<span style='color:red;'>Failed to connect to API</span>";
+        emailBox.innerHTML = "<b style='color:red;'>Connection Error. Please check internet.</b>";
     }
 }
 
-// Load saved email from storage
-function loadSavedInbox() {
-    const saved = localStorage.getItem("saved_temp_email");
-    if (!saved) {
+// 2. Load Saved Email
+function loadSavedEmail() {
+    const savedEmail = localStorage.getItem("saved_email");
+    const savedSid = localStorage.getItem("saved_sid");
+
+    if (!savedEmail || !savedSid) {
         alert("No saved email found!");
         return;
     }
-    const { login, domain } = splitEmail(saved);
-    currentLogin = login;
-    currentDomain = domain;
-    document.getElementById("emailBox").innerHTML = "Active Email: " + saved;
+
+    currentEmail = savedEmail;
+    sid_token = savedSid;
+    document.getElementById("emailBox").innerHTML = "<b>Saved Email:</b> " + currentEmail;
     startPolling();
 }
 
-// Load inbox by custom email entry
-function loadByCustomEmail() {
-    const input = document.getElementById("searchEmail").value.trim();
-    if (!input.includes("@")) {
-        alert("Please enter a valid email address!");
+// 3. Set Custom / Permanent Email Name
+async function setCustomEmail() {
+    const username = document.getElementById("searchEmail").value.trim().split("@")[0];
+    if (!username) {
+        alert("Please enter a username!");
         return;
     }
-    const { login, domain } = splitEmail(input);
-    currentLogin = login;
-    currentDomain = domain;
-    document.getElementById("emailBox").innerHTML = "Active Email: " + input;
-    localStorage.setItem("saved_temp_email", input);
-    startPolling();
-}
 
-// Check messages
-async function loadInbox() {
-    if (!currentLogin || !currentDomain) return;
+    const emailBox = document.getElementById("emailBox");
+    emailBox.innerHTML = "Loading custom inbox...";
 
     try {
-        const res = await fetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${currentLogin}&domain=${currentDomain}`);
-        const list = await res.json();
+        if (!sid_token) {
+            const initRes = await fetch(`${PROXY}${encodeURIComponent(API_BASE + "?f=get_email_address")}`);
+            const initData = await initRes.json();
+            sid_token = initData.sid_token;
+        }
+
+        const res = await fetch(`${PROXY}${encodeURIComponent(API_BASE + `?f=set_email_user&email_user=${username}&sid_token=${sid_token}`)}`);
+        const data = await res.json();
+
+        currentEmail = data.email_addr;
+        emailBox.innerHTML = "<b>Active Email:</b> " + currentEmail;
+        localStorage.setItem("saved_sid", sid_token);
+        localStorage.setItem("saved_email", currentEmail);
+
+        startPolling();
+    } catch (err) {
+        alert("Failed to load custom address");
+    }
+}
+
+// 4. Auto Fetch Messages
+async function checkInbox() {
+    if (!sid_token) return;
+
+    try {
+        const res = await fetch(`${PROXY}${encodeURIComponent(API_BASE + `?f=check_email&seq=0&sid_token=${sid_token}`)}`);
+        const data = await res.json();
         const inboxDiv = document.getElementById("inbox");
 
-        if (!list || list.length === 0) {
-            inboxDiv.innerHTML = "<i>No messages yet (auto-checking every 5s)...</i>";
+        const list = data.list || [];
+        if (list.length === 0) {
+            inboxDiv.innerHTML = "<i>Inbox is empty (Checking every 6 seconds)...</i>";
             return;
         }
 
         inboxDiv.innerHTML = "";
-        list.forEach(item => {
+        list.forEach(mail => {
             const div = document.createElement("div");
             div.className = "mail";
-            div.innerHTML = `<b>${item.subject || "(No Subject)"}</b><br><small>From: ${item.from}</small>`;
-            div.onclick = () => readMessage(item.id);
+            div.innerHTML = `<b>${mail.mail_subject || "(No Subject)"}</b><br><small>From: ${mail.mail_from}</small>`;
+            div.onclick = () => readMail(mail.mail_id);
             inboxDiv.appendChild(div);
         });
     } catch (e) {
-        console.error("Inbox fetch failed", e);
+        console.error("Checking inbox failed:", e);
     }
 }
 
-// Read message body
-async function readMessage(id) {
-    const pre = document.getElementById("mailContent");
-    pre.textContent = "Loading...";
+// 5. Read Email Body
+async function readMail(mailId) {
+    const content = document.getElementById("mailContent");
+    content.textContent = "Loading message...";
 
     try {
-        const res = await fetch(`https://www.1secmail.com/api/v1/?action=readMessage&login=${currentLogin}&domain=${currentDomain}&id=${id}`);
-        const mail = await res.json();
-        pre.textContent = mail.textBody || mail.body || "No text body available.";
-    } catch (e) {
-        pre.textContent = "Error reading message.";
+        const res = await fetch(`${PROXY}${encodeURIComponent(API_BASE + `?f=fetch_email&email_id=${mailId}&sid_token=${sid_token}`)}`);
+        const data = await res.json();
+        content.textContent = data.mail_body || "No text content found.";
+    } catch (err) {
+        content.textContent = "Error reading mail content.";
     }
 }
 </script>
