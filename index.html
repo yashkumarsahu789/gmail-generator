@@ -1,178 +1,2396 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Random Email + Permanent Inbox + Search Inbox</title>
-    <style>
-        body { font-family: Arial; padding: 20px; background: #f2f2f2; }
-        .box { background: #fff; padding: 20px; border-radius: 10px; width: 500px; margin: auto; }
-        button {
-            padding: 10px 15px; background: #007bff; color: white;
-            border: none; border-radius: 5px; cursor: pointer; margin-right: 5px;
-        }
-        #emailBox, #searchBox { 
-            background: #eee; padding: 10px; border-radius: 5px; margin-top: 10px; 
-        }
-        input {
-            width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc;
-            margin-top: 10px;
-        }
-        .mail {
-            background: #ddd; padding: 10px; margin: 10px 0;
-            border-radius: 5px; cursor: pointer;
-        }
-        pre { background: black; color: #0f0; padding: 15px; border-radius: 5px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MailGenius — Live Temp Mail & Gmail Alias Generator</title>
+  <meta name="description" content="Generate instant disposable email addresses with live inbox, auto-refresh, permanent mailbox switcher, and power-packed Gmail dot & plus trick permutations generator.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-heading: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Dark Theme (Default) */
+      --bg-body: #0a0d14;
+      --bg-card: #121824;
+      --bg-card-elevated: #1a2234;
+      --bg-input: #0e131d;
+      --bg-hover: #1f293d;
+      --border-subtle: #222d42;
+      --border-focus: #6366f1;
+      
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-light: rgba(99, 102, 241, 0.15);
+      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.12);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.12);
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+      --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.3);
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="light"] {
+      --bg-body: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-card-elevated: #f8fafc;
+      --bg-input: #f8fafc;
+      --bg-hover: #f1f5f9;
+      --border-subtle: #e2e8f0;
+      --border-focus: #6366f1;
+      
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      
+      --primary-light: rgba(99, 102, 241, 0.1);
+      --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-body);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .bg-mesh {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                  radial-gradient(circle at 85% 85%, rgba(236, 72, 153, 0.06) 0%, transparent 40%);
+    }
+
+    .app-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 24px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 16px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--primary-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 22px;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .brand-text h1 {
+      font-family: var(--font-heading);
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      background: var(--bg-input);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .tab-btn {
+      padding: 8px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: var(--primary);
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .icon-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--border-focus);
+      background: var(--bg-hover);
+    }
+
+    /* Active Card */
+    .active-email-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .active-email-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--primary-gradient);
+    }
+
+    .email-display-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .email-info-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .email-label-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--success-bg);
+      color: var(--success);
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse-live 1.8s infinite;
+    }
+
+    @keyframes pulse-live {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .email-address-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+    }
+
+    .email-text {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      word-break: break-all;
+      flex: 1;
+    }
+
+    .email-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+      text-decoration: none;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-gradient {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+    .btn-gradient:hover:not(:disabled) {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--bg-hover);
+      border-color: var(--border-focus);
+    }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .custom-email-builder {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex: 1;
+      max-width: 650px;
+    }
+
+    .input-field {
+      padding: 10px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .input-field:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .select-field {
+      padding: 10px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      outline: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .select-field:focus {
+      border-color: var(--border-focus);
+    }
+
+    .refresh-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+
+    .countdown-ring {
+      width: 18px;
+      height: 18px;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .spin-icon {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Inbox Layout */
+    .inbox-layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+      min-height: 580px;
+    }
+
+    @media (max-width: 960px) {
+      .inbox-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .inbox-list-pane, .inbox-view-pane {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .pane-header {
+      padding: 16px 20px;
+      background: var(--bg-card-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .pane-title {
+      font-family: var(--font-heading);
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .count-pill {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .messages-scroll {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 600px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message-item {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      cursor: pointer;
+      display: flex;
+      gap: 14px;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .message-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .message-item.active {
+      background: var(--primary-light);
+      border-left: 3px solid var(--primary);
+    }
+
+    .sender-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--primary-gradient);
+      color: white;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+
+    .message-content-preview {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .message-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .sender-name {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .message-time {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .message-subject {
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .message-snippet {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Empty States */
+    .empty-state {
+      padding: 60px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 14px;
+      color: var(--text-muted);
+      flex: 1;
+    }
+
+    .empty-icon-box {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--bg-card-elevated);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      font-size: 26px;
+    }
+
+    .empty-state h3 {
+      font-family: var(--font-heading);
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .empty-state p {
+      font-size: 0.85rem;
+      max-width: 280px;
+    }
+
+    /* Viewer */
+    .viewer-toolbar {
+      padding: 12px 20px;
+      background: var(--bg-card-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .viewer-tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .viewer-tab-btn {
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+    }
+
+    .viewer-tab-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .email-detail-header {
+      padding: 24px 24px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .email-subject-title {
+      font-family: var(--font-heading);
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+
+    .email-meta-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .sender-details {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .meta-address {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+    }
+    .meta-address strong {
+      color: var(--text-primary);
+    }
+
+    .email-body-container {
+      flex: 1;
+      padding: 20px 24px;
+      overflow-y: auto;
+      background: var(--bg-card);
+      min-height: 350px;
+    }
+
+    .email-iframe {
+      width: 100%;
+      min-height: 450px;
+      border: none;
+      background: #ffffff;
+      border-radius: var(--radius-sm);
+    }
+
+    .plain-text-body {
+      font-family: var(--font-sans);
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: var(--text-primary);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .raw-source-body {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      background: var(--bg-input);
+      color: #38bdf8;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    .attachments-bar {
+      margin-top: 16px;
+      padding: 14px;
+      background: var(--bg-input);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .attachments-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .attachments-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .attachment-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .attachment-chip:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    /* Gmail Generator Tab */
+    .generator-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .generator-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .generator-header h2 {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .generator-header p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-top: 4px;
+      max-width: 700px;
+    }
+
+    .generator-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: var(--bg-input);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .custom-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      color: var(--text-primary);
+      user-select: none;
+    }
+
+    .custom-checkbox input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .results-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: var(--bg-input);
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .results-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .results-count {
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .results-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .results-box {
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+
+    .result-row:hover {
+      background: var(--bg-hover);
+    }
+
+    .result-email {
+      word-break: break-all;
+    }
+
+    .result-copy-btn {
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .result-row:hover .result-copy-btn {
+      opacity: 1;
+    }
+
+    /* Saved Inboxes */
+    .saved-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .saved-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .saved-card:hover {
+      border-color: var(--border-focus);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .saved-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .saved-email-text {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      word-break: break-all;
+    }
+
+    .saved-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    /* Toast Notification Container */
+    #toastContainer {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      min-width: 280px;
+      max-width: 420px;
+      padding: 14px 18px;
+      background: var(--bg-card-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.88rem;
+      color: var(--text-primary);
+      animation: slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error { border-left: 4px solid var(--danger); }
+    .toast.info { border-left: 4px solid var(--primary); }
+
+    @keyframes slide-in {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* QR Code Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      max-width: 420px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .modal-close:hover {
+      color: var(--text-primary);
+    }
+
+    #qrBox {
+      background: #ffffff;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .hidden { display: none !important; }
+    .flex-row { display: flex; align-items: center; gap: 8px; }
+  </style>
 </head>
-<body>
+<body data-theme="dark">
 
-<div class="box">
-    <h2>Random Email Generator + Permanent Inbox + Load By Email</h2>
+  <div class="bg-mesh"></div>
 
-    <button onclick="generateEmail()">Generate New Email</button>
-    <button onclick="loadSavedEmail()">Load Saved Inbox</button>
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <a href="#" class="brand" onclick="switchTab('temp-mail'); return false;">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m22 2-7 20-4-9-9-4Z"/>
+            <path d="M22 2 11 13"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>MailGenius</h1>
+          <p>Disposable Temp Mail & Gmail Generator</p>
+        </div>
+      </a>
 
-    <div id="emailBox"></div>
+      <nav class="nav-tabs" role="tablist">
+        <button class="tab-btn active" id="tabBtnTemp" onclick="switchTab('temp-mail')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          Live Temp Mail
+        </button>
+        <button class="tab-btn" id="tabBtnGmail" onclick="switchTab('gmail-gen')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Gmail Alias Generator
+        </button>
+        <button class="tab-btn" id="tabBtnSaved" onclick="switchTab('saved-mail')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Saved Inboxes
+        </button>
+      </nav>
 
-    <h3>Load Inbox by Email Address:</h3>
-    <input id="searchEmail" placeholder="Enter temp email (ex: user123@mail.tm)">
-    <button onclick="loadByEmail()">Load Inbox</button>
+      <div class="header-actions">
+        <button class="icon-btn" id="soundToggleBtn" onclick="toggleSound()" title="Toggle Notification Chime">
+          <svg id="soundIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        </button>
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+          <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        </button>
+      </div>
+    </header>
 
-    <div id="searchBox"></div>
+    <!-- TAB 1: LIVE TEMP MAIL -->
+    <div id="tab-temp-mail" class="tab-content active">
+      <div class="active-email-card">
+        <div class="email-display-row">
+          <div class="email-info-group">
+            <div class="email-label-row">
+              <span class="status-badge">
+                <span class="status-dot"></span>
+                Active Disposable Address
+              </span>
+              <span id="domainBadge" style="font-size: 0.78rem; color: var(--text-muted);">Connecting to mail servers...</span>
+            </div>
+            
+            <div class="email-address-wrapper">
+              <span id="currentEmailDisplay" class="email-text">Generating mailbox...</span>
+              <button class="btn btn-primary btn-sm" onclick="copyCurrentEmail()" title="Copy Email Address">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                Copy
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="openQrModal()" title="Show QR Code">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
+                QR
+              </button>
+            </div>
+          </div>
 
-    <h3>Inbox:</h3>
-    <div id="inbox"></div>
+          <div class="email-actions">
+            <button class="btn btn-gradient" id="btnGenRandom" onclick="generateRandomMailbox()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+              Random Email
+            </button>
+            <button class="btn btn-secondary" id="btnRefreshInbox" onclick="manualRefreshInbox()" title="Check for new mail">
+              <svg id="refreshSpinIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+              Check Mail
+            </button>
+          </div>
+        </div>
 
-    <h3>Mail Content:</h3>
-    <pre id="mailContent"></pre>
-</div>
+        <div class="controls-row">
+          <div class="custom-email-builder">
+            <input type="text" id="customUsername" class="input-field" placeholder="Custom username (e.g. alex88)" style="min-width: 180px; flex: 1;">
+            <select id="domainSelect" class="select-field">
+              <option value="">Loading domains...</option>
+            </select>
+            <input type="password" id="customPassword" class="input-field" placeholder="Password (default: 123456)" style="width: 140px;">
+            <button class="btn btn-secondary btn-sm" onclick="createOrLoadCustomEmail()">
+              Create / Load
+            </button>
+          </div>
 
-<script>
-let currentEmail = "";
-let emailLogin = "";
+          <div class="refresh-status-bar">
+            <div class="countdown-ring">
+              <svg width="18" height="18" viewBox="0 0 36 36">
+                <path stroke="var(--border-subtle)" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path id="countdownProgress" stroke="var(--primary)" stroke-width="4" stroke-dasharray="100, 100" stroke-dashoffset="0" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+            </div>
+            <span id="refreshTimerLabel">Auto-refresh in 5s</span>
+          </div>
+        </div>
+      </div>
 
-// Save email + token for future use
-function saveEmail() {
-    localStorage.setItem("saved_email", currentEmail);
-    localStorage.setItem("saved_token", emailLogin);
-}
+      <div class="inbox-layout">
+        <!-- Message List Pane -->
+        <div class="inbox-list-pane">
+          <div class="pane-header">
+            <div class="pane-title">
+              <span>Inbox</span>
+              <span class="count-pill" id="unreadCountBadge">0</span>
+            </div>
+            <div class="flex-row">
+              <input type="text" id="filterMessagesInput" class="input-field" placeholder="Filter..." oninput="filterMessageList()" style="padding: 6px 10px; font-size: 0.8rem; width: 120px;">
+            </div>
+          </div>
 
-// Load saved email anytime
-function loadSavedEmail() {
-    const savedEmail = localStorage.getItem("saved_email");
-    const savedToken = localStorage.getItem("saved_token");
+          <div class="messages-scroll" id="messagesListContainer">
+            <div class="empty-state">
+              <div class="empty-icon-box">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+              <h3>Waiting for incoming emails...</h3>
+              <p>Your inbox refreshes automatically. Give your temporary email to any website and watch the message appear right here!</p>
+            </div>
+          </div>
+        </div>
 
-    if (!savedEmail || !savedToken) {
-        alert("No saved email found!");
-        return;
-    }
+        <!-- Message Viewer Pane -->
+        <div class="inbox-view-pane" id="messageViewerPane">
+          <div class="empty-state" id="noMessageSelectedState">
+            <div class="empty-icon-box">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <h3>No Message Selected</h3>
+            <p>Click on any message on the left to read its full HTML body, sender headers, and attachments.</p>
+          </div>
 
-    currentEmail = savedEmail;
-    emailLogin = savedToken;
+          <div id="activeMessageContent" class="hidden" style="display: flex; flex-direction: column; flex: 1;">
+            <div class="viewer-toolbar">
+              <div class="viewer-tabs">
+                <button class="viewer-tab-btn active" id="btnViewHtml" onclick="switchMessageView('html')">Formatted HTML</button>
+                <button class="viewer-tab-btn" id="btnViewText" onclick="switchMessageView('text')">Plain Text</button>
+                <button class="viewer-tab-btn" id="btnViewRaw" onclick="switchMessageView('raw')">Raw JSON</button>
+              </div>
+              <div class="flex-row">
+                <button class="btn btn-secondary btn-sm" onclick="copyMessageBody()" title="Copy Email Text">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                  Copy Text
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="downloadEml()" title="Download Message">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Export
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCurrentMessage()" title="Delete Email">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  Delete
+                </button>
+              </div>
+            </div>
 
-    document.getElementById("emailBox").innerHTML =
-        "<b>Saved Email Loaded:</b> " + currentEmail;
+            <div class="email-detail-header">
+              <h2 id="viewMailSubject" class="email-subject-title">Subject Line</h2>
+              <div class="email-meta-card">
+                <div class="sender-details">
+                  <div id="viewSenderAvatar" class="sender-avatar">?</div>
+                  <div class="meta-address">
+                    <div><strong>From:</strong> <span id="viewMailFrom"></span></div>
+                    <div><strong>To:</strong> <span id="viewMailTo"></span></div>
+                  </div>
+                </div>
+                <div class="meta-address" style="text-align: right;">
+                  <div><strong>Date:</strong> <span id="viewMailDate"></span></div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);" id="viewMailId"></div>
+                </div>
+              </div>
+            </div>
 
-    loadInbox();
-    setInterval(loadInbox, 5000);
-}
+            <div class="email-body-container">
+              <div id="htmlViewWrapper">
+                <iframe id="mailIframe" class="email-iframe" sandbox="allow-same-origin allow-popups"></iframe>
+              </div>
+              <div id="textViewWrapper" class="hidden">
+                <div id="plainTextContent" class="plain-text-body"></div>
+              </div>
+              <div id="rawViewWrapper" class="hidden">
+                <pre id="rawContent" class="raw-source-body"></pre>
+              </div>
 
-// Generate random email
-async function generateEmail() {
-    const res = await fetch("https://api.mail.tm/domains");
-    const data = await res.json();
-    const domain = data["hydra:member"][0].domain;
+              <div id="attachmentsSection" class="attachments-bar hidden">
+                <div class="attachments-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                  Attachments (<span id="attachmentsCount">0</span>)
+                </div>
+                <div id="attachmentsChips" class="attachments-chips"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    const randomName = "user" + Math.floor(Math.random() * 999999);
-    currentEmail = randomName + "@" + domain;
+    <!-- TAB 2: GMAIL ALIAS GENERATOR -->
+    <div id="tab-gmail-gen" class="tab-content">
+      <div class="generator-card">
+        <div class="generator-header">
+          <div>
+            <h2>Gmail Dot & Plus Trick Permutation Generator</h2>
+            <p>Google Gmail ignores periods in addresses (<code>john.doe@gmail.com = johndoe@gmail.com</code>) and supports plus aliases (<code>johndoe+news@gmail.com</code>). Generate hundreds of valid permutations to bypass one-time signup limits while receiving everything in your real Gmail inbox!</p>
+          </div>
+        </div>
 
-    document.getElementById("emailBox").innerHTML =
-        "<b>Your Email:</b> " + currentEmail;
+        <div class="generator-grid">
+          <div class="form-group">
+            <label for="gmailInput">Your Gmail Username or Address</label>
+            <input type="text" id="gmailInput" class="input-field" placeholder="e.g. alexsmith or alexsmith@gmail.com" value="johnsmith">
+          </div>
 
-    await fetch("https://api.mail.tm/accounts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: currentEmail, password: "123456" })
-    });
+          <div class="form-group">
+            <label for="maxPermutations">Max Output Quantity</label>
+            <select id="maxPermutations" class="select-field">
+              <option value="50">50 aliases</option>
+              <option value="100" selected>100 aliases</option>
+              <option value="250">250 aliases</option>
+              <option value="500">500 aliases</option>
+              <option value="1000">1000 aliases</option>
+              <option value="all">All Combinations</option>
+            </select>
+          </div>
 
-    const loginRes = await fetch("https://api.mail.tm/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: currentEmail, password: "123456" })
-    });
+          <div class="form-group">
+            <label for="plusTagInput">Custom Plus Tag / Prefix (Optional)</label>
+            <input type="text" id="plusTagInput" class="input-field" placeholder="e.g. promo, test, beta">
+          </div>
+        </div>
 
-    const loginData = await loginRes.json();
-    emailLogin = loginData.token;
+        <div class="checkbox-group">
+          <label class="custom-checkbox">
+            <input type="checkbox" id="checkDotTrick" checked>
+            <span><strong>Dot Trick:</strong> Insert dots between characters (e.g., <code>j.o.h.n.s.m.i.t.h@gmail.com</code>)</span>
+          </label>
+          <label class="custom-checkbox">
+            <input type="checkbox" id="checkPlusTrick" checked>
+            <span><strong>Plus Trick:</strong> Append <code>+1</code>, <code>+2</code>, <code>+tag</code> suffix</span>
+          </label>
+          <label class="custom-checkbox">
+            <input type="checkbox" id="checkGooglemail" checked>
+            <span><strong>Include @googlemail.com:</strong> Also generate equivalent <code>@googlemail.com</code> variations</span>
+          </label>
+        </div>
 
-    saveEmail();
-    loadInbox();
-    setInterval(loadInbox, 5000);
-}
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn btn-gradient" onclick="generateGmailAliases()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Generate Gmail Variations
+          </button>
+        </div>
 
-// Load inbox normally
-async function loadInbox() {
-    if (!emailLogin) return;
+        <div class="results-section">
+          <div class="results-top-bar">
+            <div class="results-count">
+              Generated <span id="gmailResultsCount" style="color: var(--primary);">0</span> Unique Gmail Aliases
+            </div>
+            <div class="results-actions">
+              <input type="text" id="filterGmailResults" class="input-field" placeholder="Search generated..." oninput="filterGmailResultsList()" style="padding: 6px 12px; font-size: 0.82rem; width: 160px;">
+              <button class="btn btn-primary btn-sm" onclick="copyAllGmailAliases()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                Copy All
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="downloadGmailExport('txt')">
+                Download .TXT
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="downloadGmailExport('csv')">
+                Download .CSV
+              </button>
+            </div>
+          </div>
 
-    const inboxRes = await fetch("https://api.mail.tm/messages", {
-        headers: { Authorization: "Bearer " + emailLogin }
-    });
+          <div class="results-box" id="gmailResultsBox">
+            <div style="color: var(--text-muted); text-align: center; padding: 30px;">
+              Enter your username and click "Generate Gmail Variations" above.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    const inboxData = await inboxRes.json();
-    const inboxDiv = document.getElementById("inbox");
-    inboxDiv.innerHTML = "";
+    <!-- TAB 3: SAVED INBOXES -->
+    <div id="tab-saved-mail" class="tab-content">
+      <div class="generator-card">
+        <div class="generator-header">
+          <div>
+            <h2>Permanent Saved Inboxes</h2>
+            <p>All temporary email accounts created in this browser session are securely stored in your local storage. Switch back to any mailbox at any time to check new messages or recover verification codes.</p>
+          </div>
+          <div class="flex-row">
+            <button class="btn btn-secondary btn-sm" onclick="exportSavedInboxesJSON()">Export Backup</button>
+            <button class="btn btn-danger btn-sm" onclick="clearAllSavedInboxes()">Clear All</button>
+          </div>
+        </div>
 
-    inboxData["hydra:member"].forEach(mail => {
-        const div = document.createElement("div");
-        div.className = "mail";
-        div.innerHTML = "<b>" + mail.subject + "</b><br>" + mail.from.address;
-        div.onclick = () => readMail(mail.id);
-        inboxDiv.appendChild(div);
-    });
-}
+        <div class="saved-grid" id="savedInboxesContainer">
+        </div>
+      </div>
+    </div>
+  </div>
 
-// Read single mail
-async function readMail(mailId) {
-    const mailRes = await fetch("https://api.mail.tm/messages/" + mailId, {
-        headers: { Authorization: "Bearer " + emailLogin }
-    });
+  <!-- QR Modal -->
+  <div class="modal-overlay" id="qrModal" onclick="closeQrModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeQrModal()">&times;</button>
+      <h3 style="font-family: var(--font-heading); font-size: 1.2rem;">Scan Email Address</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Scan this QR code with your mobile phone camera or scanner app.</p>
+      <div id="qrBox"></div>
+      <div id="qrEmailText" style="font-family: var(--font-mono); font-size: 0.88rem; font-weight: 600; word-break: break-all;"></div>
+      <button class="btn btn-primary btn-sm" onclick="copyCurrentEmail()">Copy Address</button>
+    </div>
+  </div>
 
-    const mail = await mailRes.json();
-    document.getElementById("mailContent").textContent =
-        mail.text || mail.html || "No Content";
-}
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
 
-// NEW FEATURE — Load inbox by entering email
-async function loadByEmail() {
-    const email = document.getElementById("searchEmail").value;
+  <!-- JavaScript -->
+  <script>
+    const STATE = {
+      activeEmail: "",
+      activeToken: "",
+      activePassword: "",
+      domains: [],
+      messages: [],
+      selectedMessageId: null,
+      selectedMessageData: null,
+      currentViewMode: 'html',
+      countdownValue: 5,
+      countdownTimer: null,
+      soundEnabled: true,
+      audioCtx: null,
+      generatedAliases: []
+    };
 
-    if (!email || !email.includes("@")) {
-        alert("Enter valid temp email!");
-        return;
-    }
+    const API_ENDPOINTS = [
+      "https://api.mail.gw",
+      "https://api.mail.tm"
+    ];
+    let API_BASE = API_ENDPOINTS[0];
 
-    // Try login with default password
-    const loginRes = await fetch("https://api.mail.tm/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: email, password: "123456" })
-    });
+    document.addEventListener("DOMContentLoaded", async () => {
+      loadThemePreference();
+      loadSoundPreference();
+      await fetchAvailableDomains();
 
-    const loginData = await loginRes.json();
+      const lastSavedEmail = localStorage.getItem("last_active_email");
+      const savedInboxes = getSavedInboxes();
 
-    if (!loginData.token) {
-        alert("Email not found OR wrong password!");
-        return;
-    }
+      if (lastSavedEmail && savedInboxes[lastSavedEmail]) {
+        const acc = savedInboxes[lastSavedEmail];
+        await activateMailbox(acc.address, acc.token, acc.password || "Pass_12345678");
+      } else if (Object.keys(savedInboxes).length > 0) {
+        const first = Object.values(savedInboxes)[0];
+        await activateMailbox(first.address, first.token, first.password || "Pass_12345678");
+      } else {
+        await generateRandomMailbox();
+      }
 
-    emailLogin = loginData.token;
-    currentEmail = email;
+      renderSavedInboxesList();
+      startPollingLoop();
+    });
 
-    document.getElementById("searchBox").innerHTML =
-        "<b>Loaded Inbox of:</b> " + email;
+    async function apiFetch(endpoint, options = {}) {
+      for (const base of API_ENDPOINTS) {
+        try {
+          const res = await fetch(`${base}${endpoint}`, options);
+          if (res.ok || res.status === 422 || res.status === 400 || res.status === 401) {
+            API_BASE = base;
+            return res;
+          }
+        } catch (e) {
+          console.warn(`Fetch error for ${base}${endpoint}:`, e.message);
+        }
+      }
+      throw new Error("Unable to connect to email servers.");
+    }
 
-    loadInbox();
-    setInterval(loadInbox, 5000);
-}
-</script>
+    async function fetchAvailableDomains() {
+      const select = document.getElementById("domainSelect");
+      const badge = document.getElementById("domainBadge");
+      
+      try {
+        const res = await apiFetch("/domains");
+        const data = await res.json();
+        
+        STATE.domains = (data["hydra:member"] || []).filter(d => d.isActive).map(d => d.domain);
 
+        if (STATE.domains.length === 0) {
+          select.innerHTML = `<option value="">No domains available</option>`;
+          badge.textContent = "Offline";
+          return;
+        }
+
+        select.innerHTML = STATE.domains.map(d => `<option value="${d}">@${d}</option>`).join("");
+        badge.textContent = `${STATE.domains.length} Domain(s) Live (@${STATE.domains[0]})`;
+      } catch (err) {
+        console.error("Error fetching domains:", err);
+        select.innerHTML = `<option value="westcast-systems.com">@westcast-systems.com</option>`;
+        STATE.domains = ["westcast-systems.com"];
+        badge.textContent = "Domain connected";
+      }
+    }
+
+    function generateRandomUsername() {
+      const adjectives = ["fast", "cool", "cyber", "nova", "hyper", "swift", "smart", "zen", "cloud", "alpha", "blue", "solar", "apex", "echo", "nexus"];
+      const nouns = ["fox", "wolf", "runner", "pilot", "spark", "coder", "ninja", "falcon", "ghost", "pixel", "storm", "vector", "tiger", "hawk"];
+      const randAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
+      const randNoun = nouns[Math.floor(Math.random() * nouns.length)];
+      const num = Math.floor(1000 + Math.random() * 9000);
+      return `${randAdj}${randNoun}${num}`;
+    }
+
+    async function generateRandomMailbox() {
+      const btn = document.getElementById("btnGenRandom");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spin-icon" style="display:inline-block">⏳</span> Generating...`;
+      }
+
+      try {
+        if (STATE.domains.length === 0) await fetchAvailableDomains();
+        const domain = STATE.domains[0] || "westcast-systems.com";
+        const username = generateRandomUsername();
+        const address = `${username}@${domain}`;
+        const password = "Pass_" + Math.random().toString(36).substring(2, 10);
+
+        // Create account
+        const createRes = await apiFetch("/accounts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address, password })
+        });
+
+        const accData = await createRes.json().catch(() => ({}));
+        const finalAddress = accData.address || address;
+
+        // Obtain Token
+        const tokenRes = await apiFetch("/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address: finalAddress, password })
+        });
+
+        const tokenData = await tokenRes.json();
+        if (!tokenData.token) throw new Error(tokenData.detail || "Failed to get authentication token.");
+
+        await activateMailbox(finalAddress, tokenData.token, password);
+        showToast(`Generated: ${finalAddress}`, "success");
+      } catch (err) {
+        console.error("Generate error:", err);
+        showToast(err.message || "Failed to generate email. Please retry.", "error");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg> Random Email`;
+        }
+      }
+    }
+
+    async function createOrLoadCustomEmail() {
+      let rawUsername = document.getElementById("customUsername").value.trim();
+      const domainSelect = document.getElementById("domainSelect");
+      const domain = domainSelect.value || (STATE.domains[0] || "westcast-systems.com");
+      const password = document.getElementById("customPassword").value.trim() || "123456";
+
+      if (!rawUsername) {
+        showToast("Please enter a username!", "error");
+        return;
+      }
+
+      if (rawUsername.includes("@")) {
+        rawUsername = rawUsername.split("@")[0];
+      }
+
+      const cleanUsername = rawUsername.replace(/[^a-zA-Z0-9_-]/g, "");
+      const address = `${cleanUsername}@${domain}`;
+
+      showToast(`Connecting to ${address}...`, "info");
+
+      try {
+        let tokenRes = await apiFetch("/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address, password })
+        });
+
+        let tokenData = await tokenRes.json();
+
+        if (!tokenData.token) {
+          const createRes = await apiFetch("/accounts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address, password })
+          });
+
+          const accData = await createRes.json().catch(() => ({}));
+          const finalAddress = accData.address || address;
+
+          tokenRes = await apiFetch("/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address: finalAddress, password })
+          });
+          tokenData = await tokenRes.json();
+        }
+
+        if (!tokenData.token) throw new Error("Could not log in with given credentials.");
+
+        await activateMailbox(address, tokenData.token, password);
+        showToast(`Active mailbox set: ${address}`, "success");
+      } catch (err) {
+        console.error("Custom email error:", err);
+        showToast(err.message || "Could not load custom email.", "error");
+      }
+    }
+
+    async function activateMailbox(address, token, password) {
+      STATE.activeEmail = address;
+      STATE.activeToken = token;
+      STATE.activePassword = password;
+      STATE.messages = [];
+      STATE.selectedMessageId = null;
+      STATE.selectedMessageData = null;
+
+      document.getElementById("currentEmailDisplay").textContent = address;
+      localStorage.setItem("last_active_email", address);
+
+      saveInboxToStorage(address, token, password);
+      renderSavedInboxesList();
+
+      resetMessageViewer();
+      await fetchInboxMessages(true);
+    }
+
+    function startPollingLoop() {
+      if (STATE.countdownTimer) clearInterval(STATE.countdownTimer);
+
+      STATE.countdownValue = 5;
+      updateCountdownDisplay();
+
+      STATE.countdownTimer = setInterval(() => {
+        STATE.countdownValue--;
+        if (STATE.countdownValue <= 0) {
+          STATE.countdownValue = 5;
+          fetchInboxMessages(false);
+        }
+        updateCountdownDisplay();
+      }, 1000);
+    }
+
+    function updateCountdownDisplay() {
+      const progress = document.getElementById("countdownProgress");
+      const label = document.getElementById("refreshTimerLabel");
+      const percent = (STATE.countdownValue / 5) * 100;
+      if (progress) progress.setAttribute("stroke-dasharray", `${percent}, 100`);
+      if (label) label.textContent = `Auto-refresh in ${STATE.countdownValue}s`;
+    }
+
+    async function manualRefreshInbox() {
+      const icon = document.getElementById("refreshSpinIcon");
+      if (icon) icon.classList.add("spin-icon");
+      STATE.countdownValue = 5;
+      updateCountdownDisplay();
+      await fetchInboxMessages(true);
+      if (icon) setTimeout(() => icon.classList.remove("spin-icon"), 600);
+    }
+
+    async function fetchInboxMessages(showToasts = false) {
+      if (!STATE.activeToken) return;
+
+      try {
+        const res = await apiFetch("/messages", {
+          headers: { Authorization: `Bearer ${STATE.activeToken}` }
+        });
+
+        if (res.status === 401) {
+          if (STATE.activeEmail && STATE.activePassword) {
+            const tokenRes = await apiFetch("/token", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ address: STATE.activeEmail, password: STATE.activePassword })
+            });
+            const data = await tokenRes.json();
+            if (data.token) {
+              STATE.activeToken = data.token;
+              saveInboxToStorage(STATE.activeEmail, data.token, STATE.activePassword);
+            }
+          }
+          return;
+        }
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const newMessages = data["hydra:member"] || [];
+
+        if (newMessages.length > STATE.messages.length && STATE.messages.length > 0) {
+          const countNew = newMessages.length - STATE.messages.length;
+          playNotificationChime();
+          showToast(`📬 ${countNew} new email received!`, "success");
+        } else if (showToasts && newMessages.length === 0) {
+          showToast("Inbox checked — no new messages.", "info");
+        }
+
+        STATE.messages = newMessages;
+        renderMessageList(newMessages);
+        updateInboxMessageCount(STATE.activeEmail, newMessages.length);
+      } catch (err) {
+        console.error("Error checking inbox:", err);
+      }
+    }
+
+    function renderMessageList(messages) {
+      const container = document.getElementById("messagesListContainer");
+      const unreadBadge = document.getElementById("unreadCountBadge");
+      if (unreadBadge) unreadBadge.textContent = messages.length;
+
+      if (messages.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon-box">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <h3>Waiting for incoming emails...</h3>
+            <p>Your inbox refreshes automatically. Give your temporary email to any website and watch the message appear right here!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = messages.map(msg => {
+        const fromName = msg.from.name || msg.from.address.split('@')[0];
+        const fromInitial = (fromName.charAt(0) || 'U').toUpperCase();
+        const dateStr = formatRelativeTime(msg.createdAt);
+        const isActive = msg.id === STATE.selectedMessageId ? "active" : "";
+        const unreadDot = !msg.seen ? `<span style="width:8px;height:8px;border-radius:50%;background:var(--primary);display:inline-block;"></span>` : "";
+
+        return `
+          <div class="message-item ${isActive}" onclick="loadMessageDetail('${msg.id}')" id="msgItem-${msg.id}">
+            <div class="sender-avatar">${fromInitial}</div>
+            <div class="message-content-preview">
+              <div class="message-meta-row">
+                <span class="sender-name">${escapeHtml(fromName)}</span>
+                <div class="flex-row">
+                  ${unreadDot}
+                  <span class="message-time">${dateStr}</span>
+                </div>
+              </div>
+              <div class="message-subject">${escapeHtml(msg.subject || "(No Subject)")}</div>
+              <div class="message-snippet">${escapeHtml(msg.intro || "Click to view full message body...")}</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function filterMessageList() {
+      const q = document.getElementById("filterMessagesInput").value.toLowerCase();
+      if (!q) {
+        renderMessageList(STATE.messages);
+        return;
+      }
+
+      const filtered = STATE.messages.filter(m => 
+        (m.subject && m.subject.toLowerCase().includes(q)) ||
+        (m.from && (m.from.address.toLowerCase().includes(q) || (m.from.name && m.from.name.toLowerCase().includes(q)))) ||
+        (m.intro && m.intro.toLowerCase().includes(q))
+      );
+      renderMessageList(filtered);
+    }
+
+    async function loadMessageDetail(messageId) {
+      STATE.selectedMessageId = messageId;
+
+      document.querySelectorAll(".message-item").forEach(el => el.classList.remove("active"));
+      const activeEl = document.getElementById(`msgItem-${messageId}`);
+      if (activeEl) activeEl.classList.add("active");
+
+      document.getElementById("noMessageSelectedState").classList.add("hidden");
+      const contentPane = document.getElementById("activeMessageContent");
+      contentPane.classList.remove("hidden");
+
+      try {
+        const res = await apiFetch(`/messages/${messageId}`, {
+          headers: { Authorization: `Bearer ${STATE.activeToken}` }
+        });
+        if (!res.ok) throw new Error("Failed to load message body.");
+
+        const mail = await res.json();
+        STATE.selectedMessageData = mail;
+
+        document.getElementById("viewMailSubject").textContent = mail.subject || "(No Subject)";
+        document.getElementById("viewMailFrom").textContent = `${mail.from.name ? mail.from.name + ' ' : ''}<${mail.from.address}>`;
+        document.getElementById("viewMailTo").textContent = (mail.to || []).map(t => t.address).join(", ") || STATE.activeEmail;
+        document.getElementById("viewMailDate").textContent = new Date(mail.createdAt).toLocaleString();
+        document.getElementById("viewMailId").textContent = `ID: ${mail.id}`;
+        
+        const senderName = mail.from.name || mail.from.address;
+        document.getElementById("viewSenderAvatar").textContent = (senderName.charAt(0) || 'U').toUpperCase();
+
+        const iframe = document.getElementById("mailIframe");
+        const htmlBody = mail.html && mail.html.length > 0 ? mail.html.join("") : `<pre style="font-family:sans-serif;white-space:pre-wrap;padding:20px;">${escapeHtml(mail.text || "No content found.")}</pre>`;
+        
+        iframe.srcdoc = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 16px; color: #1e293b; line-height: 1.6; word-break: break-word; }
+              a { color: #4f46e5; }
+              img { max-width: 100%; height: auto; }
+            </style>
+          </head>
+          <body>${htmlBody}</body>
+          </html>
+        `;
+
+        document.getElementById("plainTextContent").textContent = mail.text || "No plain text content available.";
+        document.getElementById("rawContent").textContent = JSON.stringify(mail, null, 2);
+
+        const attachmentsSection = document.getElementById("attachmentsSection");
+        const attachmentsChips = document.getElementById("attachmentsChips");
+        const attachmentsCount = document.getElementById("attachmentsCount");
+
+        if (mail.attachments && mail.attachments.length > 0) {
+          attachmentsSection.classList.remove("hidden");
+          attachmentsCount.textContent = mail.attachments.length;
+          attachmentsChips.innerHTML = mail.attachments.map(att => `
+            <a href="${API_BASE}${att.downloadUrl}" target="_blank" class="attachment-chip" download="${att.filename}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              ${escapeHtml(att.filename)} (${formatBytes(att.size)})
+            </a>
+          `).join("");
+        } else {
+          attachmentsSection.classList.add("hidden");
+        }
+
+        switchMessageView(STATE.currentViewMode);
+      } catch (err) {
+        console.error("Error reading mail:", err);
+        showToast("Error loading mail details.", "error");
+      }
+    }
+
+    function switchMessageView(mode) {
+      STATE.currentViewMode = mode;
+      document.querySelectorAll(".viewer-tab-btn").forEach(b => b.classList.remove("active"));
+      
+      const htmlWrap = document.getElementById("htmlViewWrapper");
+      const textWrap = document.getElementById("textViewWrapper");
+      const rawWrap = document.getElementById("rawViewWrapper");
+
+      htmlWrap.classList.add("hidden");
+      textWrap.classList.add("hidden");
+      rawWrap.classList.add("hidden");
+
+      if (mode === 'html') {
+        document.getElementById("btnViewHtml").classList.add("active");
+        htmlWrap.classList.remove("hidden");
+      } else if (mode === 'text') {
+        document.getElementById("btnViewText").classList.add("active");
+        textWrap.classList.remove("hidden");
+      } else if (mode === 'raw') {
+        document.getElementById("btnViewRaw").classList.add("active");
+        rawWrap.classList.remove("hidden");
+      }
+    }
+
+    function resetMessageViewer() {
+      STATE.selectedMessageId = null;
+      STATE.selectedMessageData = null;
+      document.getElementById("noMessageSelectedState").classList.remove("hidden");
+      document.getElementById("activeMessageContent").classList.add("hidden");
+    }
+
+    async function deleteCurrentMessage() {
+      if (!STATE.selectedMessageId || !STATE.activeToken) return;
+      
+      try {
+        await apiFetch(`/messages/${STATE.selectedMessageId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${STATE.activeToken}` }
+        });
+        showToast("Message deleted.", "info");
+        resetMessageViewer();
+        await fetchInboxMessages(false);
+      } catch (err) {
+        showToast("Could not delete message.", "error");
+      }
+    }
+
+    function copyMessageBody() {
+      if (!STATE.selectedMessageData) return;
+      const text = STATE.selectedMessageData.text || STATE.selectedMessageData.subject || "";
+      copyText(text);
+    }
+
+    function downloadEml() {
+      if (!STATE.selectedMessageData) return;
+      const mail = STATE.selectedMessageData;
+      const emlContent = `From: ${mail.from.address}\nTo: ${STATE.activeEmail}\nSubject: ${mail.subject}\nDate: ${mail.createdAt}\n\n${mail.text || ''}`;
+      const blob = new Blob([emlContent], { type: "message/rfc822" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `email_${mail.id}.eml`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Exported .eml file.", "success");
+    }
+
+    /* Gmail Generator */
+    function generateGmailAliases() {
+      const input = document.getElementById("gmailInput").value.trim().toLowerCase();
+      if (!input) {
+        showToast("Please enter your Gmail address!", "error");
+        return;
+      }
+
+      let username = input;
+      let domain = "gmail.com";
+
+      if (input.includes("@")) {
+        const parts = input.split("@");
+        username = parts[0].replace(/\./g, "");
+        domain = parts[1] || "gmail.com";
+      } else {
+        username = input.replace(/\./g, "");
+      }
+
+      const useDotTrick = document.getElementById("checkDotTrick").checked;
+      const usePlusTrick = document.getElementById("checkPlusTrick").checked;
+      const includeGooglemail = document.getElementById("checkGooglemail").checked;
+      const maxLimitVal = document.getElementById("maxPermutations").value;
+      const maxLimit = maxLimitVal === "all" ? 10000 : parseInt(maxLimitVal, 10);
+      const customPlusTag = document.getElementById("plusTagInput").value.trim();
+
+      const aliases = new Set();
+      const domainsToUse = includeGooglemail ? ["gmail.com", "googlemail.com"] : ["gmail.com"];
+
+      let dotVariations = [username];
+      if (useDotTrick && username.length > 1) {
+        dotVariations = generateDotPermutations(username, maxLimit);
+      }
+
+      domainsToUse.forEach(dom => {
+        dotVariations.forEach(v => {
+          if (aliases.size < maxLimit) {
+            aliases.add(`${v}@${dom}`);
+          }
+        });
+      });
+
+      if (usePlusTrick) {
+        const samplePlusTags = customPlusTag ? [customPlusTag] : ["news", "app", "test", "sub", "promo", "vip", "login", "sec", "01", "02"];
+        domainsToUse.forEach(dom => {
+          samplePlusTags.forEach(tag => {
+            if (aliases.size < maxLimit) {
+              aliases.add(`${username}+${tag}@${dom}`);
+            }
+          });
+          for (let i = 1; i <= 20 && aliases.size < maxLimit; i++) {
+            aliases.add(`${username}+${i}@${dom}`);
+          }
+        });
+      }
+
+      STATE.generatedAliases = Array.from(aliases);
+      renderGmailResultsList(STATE.generatedAliases);
+      showToast(`Generated ${STATE.generatedAliases.length} Gmail aliases!`, "success");
+    }
+
+    function generateDotPermutations(name, limit) {
+      const len = name.length - 1;
+      const totalPossible = Math.pow(2, len);
+      const count = Math.min(totalPossible, limit);
+      const results = [];
+
+      for (let i = 0; i < count; i++) {
+        let perm = "";
+        for (let j = 0; j < len; j++) {
+          perm += name[j];
+          if ((i >> j) & 1) {
+            perm += ".";
+          }
+        }
+        perm += name[len];
+        results.push(perm);
+      }
+      return results;
+    }
+
+    function renderGmailResultsList(aliases) {
+      const box = document.getElementById("gmailResultsBox");
+      const countEl = document.getElementById("gmailResultsCount");
+      countEl.textContent = aliases.length;
+
+      if (aliases.length === 0) {
+        box.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 30px;">No aliases generated. Check your input and options.</div>`;
+        return;
+      }
+
+      box.innerHTML = aliases.map(email => `
+        <div class="result-row">
+          <span class="result-email">${escapeHtml(email)}</span>
+          <button class="btn btn-secondary btn-sm result-copy-btn" onclick="copyText('${email}')">
+            Copy
+          </button>
+        </div>
+      `).join("");
+    }
+
+    function filterGmailResultsList() {
+      const q = document.getElementById("filterGmailResults").value.toLowerCase();
+      if (!q) {
+        renderGmailResultsList(STATE.generatedAliases);
+        return;
+      }
+      const filtered = STATE.generatedAliases.filter(e => e.toLowerCase().includes(q));
+      renderGmailResultsList(filtered);
+    }
+
+    function copyAllGmailAliases() {
+      if (STATE.generatedAliases.length === 0) return;
+      const text = STATE.generatedAliases.join("\n");
+      copyText(text);
+    }
+
+    function downloadGmailExport(format) {
+      if (STATE.generatedAliases.length === 0) {
+        showToast("No aliases to download.", "error");
+        return;
+      }
+
+      let content = "";
+      let mime = "text/plain";
+      let ext = "txt";
+
+      if (format === 'csv') {
+        content = "Email Address\n" + STATE.generatedAliases.join("\n");
+        mime = "text/csv";
+        ext = "csv";
+      } else {
+        content = STATE.generatedAliases.join("\n");
+      }
+
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `gmail_aliases_${Date.now()}.${ext}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`Exported ${ext.toUpperCase()} file successfully!`, "success");
+    }
+
+    /* Saved Inboxes */
+    function getSavedInboxes() {
+      try {
+        return JSON.parse(localStorage.getItem("saved_mailboxes") || "{}");
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveInboxToStorage(address, token, password) {
+      const inboxes = getSavedInboxes();
+      inboxes[address] = {
+        address,
+        token,
+        password,
+        lastActive: Date.now(),
+        messageCount: inboxes[address] ? inboxes[address].messageCount || 0 : 0
+      };
+      localStorage.setItem("saved_mailboxes", JSON.stringify(inboxes));
+    }
+
+    function updateInboxMessageCount(address, count) {
+      const inboxes = getSavedInboxes();
+      if (inboxes[address]) {
+        inboxes[address].messageCount = count;
+        localStorage.setItem("saved_mailboxes", JSON.stringify(inboxes));
+      }
+    }
+
+    function deleteSavedInbox(address, event) {
+      if (event) event.stopPropagation();
+      const inboxes = getSavedInboxes();
+      delete inboxes[address];
+      localStorage.setItem("saved_mailboxes", JSON.stringify(inboxes));
+      renderSavedInboxesList();
+      showToast(`Deleted ${address}`, "info");
+
+      if (STATE.activeEmail === address) {
+        generateRandomMailbox();
+      }
+    }
+
+    function clearAllSavedInboxes() {
+      if (!confirm("Are you sure you want to delete all saved inboxes?")) return;
+      localStorage.removeItem("saved_mailboxes");
+      renderSavedInboxesList();
+      showToast("All saved mailboxes cleared.", "info");
+      generateRandomMailbox();
+    }
+
+    function exportSavedInboxesJSON() {
+      const inboxes = getSavedInboxes();
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(inboxes, null, 2));
+      const a = document.createElement("a");
+      a.href = dataStr;
+      a.download = `saved_mailboxes_backup_${Date.now()}.json`;
+      a.click();
+    }
+
+    function renderSavedInboxesList() {
+      const container = document.getElementById("savedInboxesContainer");
+      if (!container) return;
+      const inboxes = Object.values(getSavedInboxes());
+
+      if (inboxes.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-icon-box">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>
+            </div>
+            <h3>No Saved Inboxes Yet</h3>
+            <p>Every disposable email you create is automatically saved here for quick switching.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = inboxes.map(item => {
+        const isCurrent = item.address === STATE.activeEmail;
+        return `
+          <div class="saved-card" onclick="activateMailbox('${item.address}', '${item.token}', '${item.password || "Pass_12345678"}'); switchTab('temp-mail');">
+            <div class="saved-card-header">
+              <span class="status-badge" style="${isCurrent ? '' : 'background:var(--bg-input);color:var(--text-muted);'}">
+                ${isCurrent ? '<span class="status-dot"></span> CURRENT' : 'SAVED'}
+              </span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${item.messageCount || 0} messages</span>
+            </div>
+
+            <div class="saved-email-text">${escapeHtml(item.address)}</div>
+
+            <div class="saved-card-actions">
+              <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); activateMailbox('${item.address}', '${item.token}', '${item.password || "Pass_12345678"}'); switchTab('temp-mail');">
+                Open Inbox
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); copyText('${item.address}')">
+                Copy
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteSavedInbox('${item.address}', event)" title="Delete">
+                &times;
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    /* QR Code */
+    function openQrModal() {
+      if (!STATE.activeEmail) return;
+      const modal = document.getElementById("qrModal");
+      const qrBox = document.getElementById("qrBox");
+      const qrEmailText = document.getElementById("qrEmailText");
+      
+      qrEmailText.textContent = STATE.activeEmail;
+      qrBox.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(STATE.activeEmail)}" alt="QR Code" width="180" height="180" style="border-radius: 8px; display:block;">`;
+      modal.classList.add("active");
+    }
+
+    function closeQrModal(event) {
+      if (event && event.target.closest(".modal-card") && !event.target.classList.contains("modal-close")) return;
+      document.getElementById("qrModal").classList.remove("active");
+    }
+
+    /* Sound */
+    function toggleSound() {
+      STATE.soundEnabled = !STATE.soundEnabled;
+      localStorage.setItem("sound_enabled", STATE.soundEnabled ? "1" : "0");
+      updateSoundButtonUI();
+      if (STATE.soundEnabled) playNotificationChime();
+      showToast(STATE.soundEnabled ? "Sound chime enabled" : "Sound muted", "info");
+    }
+
+    function loadSoundPreference() {
+      const saved = localStorage.getItem("sound_enabled");
+      STATE.soundEnabled = saved !== "0";
+      updateSoundButtonUI();
+    }
+
+    function updateSoundButtonUI() {
+      const icon = document.getElementById("soundIcon");
+      if (STATE.soundEnabled) {
+        icon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>`;
+      } else {
+        icon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>`;
+      }
+    }
+
+    function playNotificationChime() {
+      if (!STATE.soundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = STATE.audioCtx || new AudioCtx();
+        STATE.audioCtx = ctx;
+
+        if (ctx.state === "suspended") ctx.resume();
+
+        const now = ctx.currentTime;
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = "sine";
+        osc1.frequency.setValueAtTime(587.33, now);
+        gain1.gain.setValueAtTime(0.15, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.35);
+
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = "sine";
+        osc2.frequency.setValueAtTime(880, now + 0.12);
+        gain2.gain.setValueAtTime(0.15, now + 0.12);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now + 0.12);
+        osc2.stop(now + 0.55);
+      } catch (e) {
+        console.warn("Audio prevented:", e);
+      }
+    }
+
+    /* Theme */
+    function toggleTheme() {
+      const current = document.body.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      document.body.setAttribute("data-theme", next);
+      localStorage.setItem("theme_pref", next);
+      updateThemeIcon(next);
+    }
+
+    function loadThemePreference() {
+      const pref = localStorage.getItem("theme_pref") || "dark";
+      document.body.setAttribute("data-theme", pref);
+      updateThemeIcon(pref);
+    }
+
+    function updateThemeIcon(theme) {
+      const icon = document.getElementById("themeIcon");
+      if (theme === "dark") {
+        icon.innerHTML = `<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>`;
+      } else {
+        icon.innerHTML = `<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>`;
+      }
+    }
+
+    /* Navigation */
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+
+      if (tabId === 'temp-mail') {
+        document.getElementById("tabBtnTemp").classList.add("active");
+        document.getElementById("tab-temp-mail").classList.add("active");
+      } else if (tabId === 'gmail-gen') {
+        document.getElementById("tabBtnGmail").classList.add("active");
+        document.getElementById("tab-gmail-gen").classList.add("active");
+        if (STATE.generatedAliases.length === 0) generateGmailAliases();
+      } else if (tabId === 'saved-mail') {
+        document.getElementById("tabBtnSaved").classList.add("active");
+        document.getElementById("tab-saved-mail").classList.add("active");
+        renderSavedInboxesList();
+      }
+    }
+
+    function copyCurrentEmail() {
+      if (!STATE.activeEmail) return;
+      copyText(STATE.activeEmail);
+    }
+
+    async function copyText(str) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(str);
+        } else {
+          throw new Error("fallback");
+        }
+      } catch (e) {
+        const textarea = document.createElement("textarea");
+        textarea.value = str;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-999999px";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      showToast(`Copied: ${str}`, "success");
+    }
+
+    function showToast(msg, type = "info") {
+      const container = document.getElementById("toastContainer");
+      if (!container) return;
+      const toast = document.createElement("div");
+      toast.className = `toast ${type}`;
+      
+      let icon = `ℹ️`;
+      if (type === "success") icon = `✅`;
+      if (type === "error") icon = `⚠️`;
+
+      toast.innerHTML = `<span>${icon}</span> <span>${escapeHtml(msg)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(100%)";
+        toast.style.transition = "all 0.25s ease";
+        setTimeout(() => toast.remove(), 250);
+      }, 3000);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function formatRelativeTime(dateString) {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffSec = Math.floor((now - date) / 1000);
+
+      if (diffSec < 10) return "Just now";
+      if (diffSec < 60) return `${diffSec}s ago`;
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr}h ago`;
+      return date.toLocaleDateString();
+    }
+
+    function formatBytes(bytes, decimals = 1) {
+      if (!+bytes) return '0 B';
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+    }
+  </script>
 </body>
 </html>
